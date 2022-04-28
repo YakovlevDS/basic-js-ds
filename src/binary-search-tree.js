@@ -8,16 +8,13 @@ const { NotImplementedError } = require('../extensions/index.js');
  */
 
 class Node {
-    constructor(data = null, left = null, right = null) {
-        this.data = data;
-        this.right = right;
-        this.left = left;
-    }
-
-    toString() {
-        return JSON.stringify(this);
+    constructor(value) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
     }
 }
+
 class BinarySearchTree {
     constructor() {
         this.root = null;
@@ -25,85 +22,153 @@ class BinarySearchTree {
 
 
 
+
     root() {
-        return this.root;
-    }
-    add(data) {
-        if (this.root === null) {
-            this.root = new Node(data);
-        } else {
-            let current = this.root;
-            while (true) {
-                if (data > current.data) {
-                    if (current.right === null) {
-                        current.right = new Node(data);
-                        break;
-                    } else {
-                        current = current.right;
-                    }
-                } else if (data < current.data) {
-                    if (current.left === null) {
-                        current.left = new Node(data);
-                        break;
-                    } else {
-                        current = current.left;
-                    }
-                }
-            }
-        }
-    }
-
-    has(data) {
-        return !!this.find(data);
-    }
-
-    find(data) {
-        let traverse = (node) => {
-            if (node == null || node.data === data) {
-                return node;
-            } else if (data < node.data) {
-                traverse(node.left);
-            } else {
-                traverse(node.right);
-            }
-        };
-        return traverse(this.root);
-    }
-
-    remove(data, node = this.root) {
-        if (!node) {
+        if (!this.root) {
             return null;
         }
-
-        if (data < node.data) {
-            node.left = this.remove(data, node.left);
-        } else if (data > node.data) {
-            node.right = this.remove(data, node.right);
-        } else {
-            if (!node.left) {
-                return node.right;
-            } else if (!node.right) {
-                return node.left;
-            } else {
-                node.data = this.min(node.right);
-                node.right = this.remove(node.data, node.right);
-            }
+        return this.root;
+    }
+    find(data) {
+        let nodeFound = null;
+        const search = (node) => {
+            if (data < node.value) search(node.left);
+            else if (data > node.value) search(node.right);
+            else nodeFound = node;
         }
-        return node;
+        search(this.rootNode);
+        return nodeFound;
+        // if (!this.root) return false
+
+        // let current = this.root
+        // let found = false
+        // while (current && !found) {
+        //     if (value < current.value) {
+        //         current = current.left
+        //     } else if (value > current.value) {
+        //         current = current.right
+        //     } else {
+        //         found = current
+        //     }
+
+        // }
+
+        // if (!found) return undefined;
+        // return found
+
+
+    }
+    add(value) {
+        this.root = addWithin(this.root, value);
+
+        function addWithin(node, value) {
+            if (!node) {
+                return new Node(value);
+            }
+
+            if (node.value === value) {
+                return node;
+            }
+
+            if (value < node.value) {
+                node.left = addWithin(node.left, value);
+            } else {
+                node.right = addWithin(node.right, value);
+            }
+
+            return node;
+        }
     }
 
-    min(node = this.root) {
+    has(value) {
+        return searchWithin(this.root, value);
+
+        function searchWithin(node, value) {
+            if (!node) {
+                return false;
+            }
+
+            if (node.value === value) {
+                return true;
+            }
+
+            return value < node.value ?
+                searchWithin(node.left, value) :
+                searchWithin(node.right, value);
+        }
+    }
+
+    remove(value) {
+        this.root = removeNode(this.root, value);
+
+        function removeNode(node, value) {
+            if (!node) {
+                return null;
+            }
+
+            if (value < node.value) {
+                node.left = removeNode(node.left, value);
+                return node;
+            } else if (node.value < value) {
+                node.right = removeNode(node.right, value);
+                return node;
+            } else {
+                // equal - should remove this item
+                if (!node.left && !node.right) {
+                    // put null instead of item
+                    return null;
+                }
+
+                if (!node.left) {
+                    // set right child instead of item
+                    node = node.right;
+                    return node;
+                }
+
+                if (!node.right) {
+                    // set left child instead of item
+                    node = node.left;
+                    return node;
+                }
+
+                // both children exists for this item
+                let minFromRight = node.right;
+                while (minFromRight.left) {
+                    minFromRight = minFromRight.left;
+                }
+                node.value = minFromRight.value;
+
+                node.right = removeNode(node.right, minFromRight.value);
+
+                return node;
+            }
+        }
+    }
+
+    min() {
+        if (!this.root) {
+            return;
+        }
+
+        let node = this.root;
         while (node.left) {
             node = node.left;
         }
-        return node.data;
+
+        return node.value;
     }
 
-    max(node = this.root) {
+    max() {
+        if (!this.root) {
+            return;
+        }
+
+        let node = this.root;
         while (node.right) {
             node = node.right;
         }
-        return node.data;
+
+        return node.value;
     }
 
 }
