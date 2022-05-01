@@ -7,170 +7,76 @@ const { NotImplementedError } = require('../extensions/index.js');
  * using Node from extensions
  */
 
-class Node {
-    constructor(value) {
-        this.value = value;
-        this.left = null;
-        this.right = null;
-    }
-}
-
 class BinarySearchTree {
-    constructor() {
-        this.root = null;
-    }
-
-
-
-
+    obj = null;
     root() {
-        if (!this.root) {
-            return null;
-        }
-        return this.root;
-    }
-    find(data) {
-        let nodeFound = null;
-        const search = (node) => {
-            if (data < node.value) search(node.left);
-            else if (data > node.value) search(node.right);
-            else nodeFound = node;
-        }
-        search(this.rootNode);
-        return nodeFound;
-        // if (!this.root) return false
-
-        // let current = this.root
-        // let found = false
-        // while (current && !found) {
-        //     if (value < current.value) {
-        //         current = current.left
-        //     } else if (value > current.value) {
-        //         current = current.right
-        //     } else {
-        //         found = current
-        //     }
-
-        // }
-
-        // if (!found) return undefined;
-        // return found
-
-
-    }
-    add(value) {
-        this.root = addWithin(this.root, value);
-
-        function addWithin(node, value) {
-            if (!node) {
-                return new Node(value);
-            }
-
-            if (node.value === value) {
-                return node;
-            }
-
-            if (value < node.value) {
-                node.left = addWithin(node.left, value);
-            } else {
-                node.right = addWithin(node.right, value);
-            }
-
-            return node;
-        }
+        return this.obj;
     }
 
-    has(value) {
-        return searchWithin(this.root, value);
+    add(data, obj = this.obj) {
+        this.obj = search(data, obj);
 
-        function searchWithin(node, value) {
-            if (!node) {
-                return false;
+        function search(data, obj) {
+            if (obj == null) return ({ data: data, left: null, right: null })
+            if (obj.data > data) obj.right = search(data, obj.right);
+            if (obj.data < data) obj.left = search(data, obj.left);
+            return obj;
+        }
+    }
+    has(data, obj = this.obj) {
+        if (obj == null) return false
+        if (obj.data > data) return this.has(data, obj.right);
+        if (obj.data < data) return this.has(data, obj.left);
+        return true;
+    }
+    find(data, obj = this.obj) {
+        if (obj == null) return null;
+        if (obj.data > data) return this.find(data, obj.right)
+        if (obj.data < data) return this.find(data, obj.left);
+        return obj;
+    }
+
+    remove(data, obj = this.obj) {
+        if (obj == null) return null;
+        if (obj.data > data) obj.right = this.remove(data, obj.right)
+        else if (obj.data < data) obj.left = this.remove(data, obj.left)
+        else {
+            if (!obj.left && !obj.right) return null
+            else if (obj.left && !obj.right) return obj.left
+            else if (!obj.left && obj.right) return obj.right
+            else {
+                let nNode = remTrick(obj.left, obj.right);
+                nNode.connect.left = nNode.prev;
+                if (this.obj.data == data) this.obj = nNode.connect;
+
+                return nNode.connect;
             }
+        }
+        return obj;
 
-            if (node.value === value) {
-                return true;
+        function remTrick(objFind, objCon) {
+            if (!objFind) return null;
+            if (!objCon) return null;
+            if (objFind.right == null) {
+                objFind.right = objCon;
+                return { "connect": objFind, "prev": objFind.left };
             }
-
-            return value < node.value ?
-                searchWithin(node.left, value) :
-                searchWithin(node.right, value);
+            let nNode = remTrick(objFind.right, objCon);
+            objFind.right = nNode.prev;
+            return { "connect": nNode.connect, "prev": objFind };
         }
     }
 
-    remove(value) {
-        this.root = removeNode(this.root, value);
-
-        function removeNode(node, value) {
-            if (!node) {
-                return null;
-            }
-
-            if (value < node.value) {
-                node.left = removeNode(node.left, value);
-                return node;
-            } else if (node.value < value) {
-                node.right = removeNode(node.right, value);
-                return node;
-            } else {
-                // equal - should remove this item
-                if (!node.left && !node.right) {
-                    // put null instead of item
-                    return null;
-                }
-
-                if (!node.left) {
-                    // set right child instead of item
-                    node = node.right;
-                    return node;
-                }
-
-                if (!node.right) {
-                    // set left child instead of item
-                    node = node.left;
-                    return node;
-                }
-
-                // both children exists for this item
-                let minFromRight = node.right;
-                while (minFromRight.left) {
-                    minFromRight = minFromRight.left;
-                }
-                node.value = minFromRight.value;
-
-                node.right = removeNode(node.right, minFromRight.value);
-
-                return node;
-            }
-        }
+    max(obj = this.obj) {
+        if (obj == null) return null;
+        if (obj.left) return this.max(obj.left)
+        return obj.data;
     }
-
-    min() {
-        if (!this.root) {
-            return;
-        }
-
-        let node = this.root;
-        while (node.left) {
-            node = node.left;
-        }
-
-        return node.value;
+    min(obj = this.obj) {
+        if (obj == null) return null;
+        if (obj.right) return this.min(obj.right)
+        return obj.data;
     }
-
-    max() {
-        if (!this.root) {
-            return;
-        }
-
-        let node = this.root;
-        while (node.right) {
-            node = node.right;
-        }
-
-        return node.value;
-    }
-
 }
 
 module.exports = {
